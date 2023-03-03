@@ -10,7 +10,6 @@ import {
   Navbar,
   Pagination,
   Text,
-  NavLink,
   Group,
   Burger,
   useMantineTheme,
@@ -220,7 +219,7 @@ const LandingPage = () => {
                         lockScroll={false}
                         onClose={() => setOpenedCart(false)}
                         padding="xl"
-                        size="500px"
+                        size="510px"
                         position="right"
                       >
                         <div style={{ textAlign: "center" }}>
@@ -231,7 +230,7 @@ const LandingPage = () => {
                             {cartProducts.length === 0 ? (
                               <div
                                 style={{
-                                  height: "900px",
+                                  height: "9000px",
                                   textAlign: "center",
                                 }}
                               >
@@ -241,8 +240,8 @@ const LandingPage = () => {
                               <div
                                 style={{
                                   overflowY: "scroll",
-                                  minHeight: "930px",
-                                  maxHeight: "930px",
+                                  minHeight: "910px",
+                                  maxHeight: "910px",
                                 }}
                               >
                                 {cartProducts.map((product) => (
@@ -350,22 +349,23 @@ const LandingPage = () => {
               );
             })}
           </div>
-          <Pagination
-            mt="100px"
-            total={2}
-            onChange={onPageChange}
-            position="center"
-            styles={(theme) => ({
-              item: {
-                "&[data-active]": {
+          {
+            <Pagination
+              mt="100px"
+              total={2}
+              onChange={onPageChange}
+              position="center"
+              styles={{
+                control: {
                   backgroundImage: theme.fn.gradient({
-                    from: "red",
-                    to: "yellow",
+                    from: "yellow",
+                    to: "red",
                   }),
+                  "&:last-child, &:first-child": { backgroundImage: "none" },
                 },
-              },
-            })}
-          />
+              }}
+            />
+          }
         </Text>
       </AppShell>
     </div>

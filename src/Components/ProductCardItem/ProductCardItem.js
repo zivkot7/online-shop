@@ -81,7 +81,7 @@ const ProductCardItem = (props) => {
   ));
 
   return (
-    <div>
+    <div className="product-card-item" onClick={onClick}>
       <Card withBorder radius="md" className={classes.card} mt="50px">
         <Card.Section className={classes.imageSection}>
           <Image

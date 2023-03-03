@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import supabase from "../../Config/Config";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../Providers/Authentication/Authentication";
@@ -17,6 +17,7 @@ import {
   ActionIcon,
   Radio,
   Accordion,
+  Table,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons";
 
@@ -28,6 +29,37 @@ const Dashboard = () => {
   const auth = useAuth();
 
   const [apartments, setApartments] = useState([]);
+
+  const rows = apartments.map((apartment) => (
+    <tr key={apartment.id}>
+      <td>{apartment.imageUrl}</td>
+      <td>{apartment.title}</td>
+      <td>{apartment.description}</td>
+      <td>{apartment.location}</td>
+      <td align="center">{apartment.sqft}</td>
+      <td style={{ display: "flex", justifyContent: "space-between" }}>
+        {apartment.monthly_price}
+        <Group>
+          <Button
+            size="xs"
+            variant="gradient"
+            gradient={{ from: "yellow", to: "red" }}
+            onClick={() => deleteData(apartment.id)}
+          >
+            Delete
+          </Button>
+          <Button
+            size="xs"
+            variant="gradient"
+            gradient={{ from: "yellow", to: "red" }}
+            onClick={() => navigate(apartment.id)}
+          >
+            Edit
+          </Button>
+        </Group>
+      </td>
+    </tr>
+  ));
 
   const fetchData = async () => {
     const { data: apartments, error } = await supabase
@@ -64,6 +96,7 @@ const Dashboard = () => {
     const newApartments = apartments.filter((apartment) => apartment.id !== id);
     setApartments(newApartments);
   };
+
   return (
     <AppShell
       styles={{
@@ -93,14 +126,26 @@ const Dashboard = () => {
                 </ActionIcon>
               }
             />
-            <Accordion defaultValue="navbar" mt="30px">
-              <Accordion.Item value="products">
-                <Accordion.Control>Products</Accordion.Control>
-                <Accordion.Panel>
-                  PRODUCT 1 PRODUCT 2 PRODUCT 3 PRODUCT 4 PRODUCT 5 PRODUCT 6
-                  PRODUCT 7
-                </Accordion.Panel>
-              </Accordion.Item>
+            <Button
+              mt="30px"
+              styles={() => ({
+                root: {
+                  height: "50px",
+                  padding: "15px 185px 5px 20px",
+                  color: "black",
+                  fontWeight: "normal",
+                  fontSize: "16px",
+                  backgroundColor: "white",
+                  border: "none",
+                  borderBottom: "1px solid lightgrey",
+                  borderRadius: "0px",
+                },
+                "&:hover": { backgroundColor: "#fafafa" },
+              })}
+            >
+              Products
+            </Button>
+            <Accordion defaultValue="navbar">
               <Accordion.Item value="kategories">
                 <Accordion.Control>Kategories</Accordion.Control>
                 <Accordion.Panel>
@@ -118,9 +163,27 @@ const Dashboard = () => {
                   </Radio.Group>
                 </Accordion.Panel>
               </Accordion.Item>
-              <Accordion.Item value="orders">
-                <Accordion.Control>Orders</Accordion.Control>
-              </Accordion.Item>
+              <Button
+                styles={() => ({
+                  root: {
+                    height: "50px",
+                    padding: "15px 200px 15px 20px",
+                    color: "black",
+                    fontWeight: "normal",
+                    fontSize: "16px",
+                    backgroundColor: "white",
+                    border: "none",
+                    borderBottom: "1px solid lightgrey",
+                    borderRadius: "0px",
+                    "&:hover": {
+                      transition: "0.2s",
+                      backgroundColor: "#fafafa",
+                    },
+                  },
+                })}
+              >
+                Orders
+              </Button>
             </Accordion>
           </Navbar.Section>
           <Navbar.Section>
@@ -173,43 +236,27 @@ const Dashboard = () => {
         </Header>
       }
     >
-      <Text>
-        {apartments.map((apartment) => {
-          const {
-            id,
-            title,
-            imageUrl,
-            description,
-            location,
-            sqft,
-            monthly_price,
-          } = apartment;
-          return (
-            <div key={id}>
-              <img src={imageUrl} />
-              <h4>{title}</h4>
-              <p>Description: {description}</p>
-              <p>Locaiton: {location}</p>
-              <p>Sqft: {sqft}m²</p>
-              <p>Monthly price: {monthly_price}$</p>
-              <Button
-                variant="gradient"
-                gradient={{ from: "yellow", to: "red" }}
-                onClick={() => deleteData(id)}
-              >
-                Delete
-              </Button>
-              <Button
-                variant="gradient"
-                gradient={{ from: "yellow", to: "red" }}
-                onClick={() => navigate(id)}
-              >
-                Edit
-              </Button>
-            </div>
-          );
-        })}
-      </Text>
+      <Group display="block">
+        <Table
+          striped={true}
+          withBorder
+          highlightOnHover
+          withColumnBorders
+          verticalSpacing="md"
+        >
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Location</th>
+              <th style={{ textAlign: "center" }}>Sqft</th>
+              <th>Monthly price</th>
+            </tr>
+          </thead>
+          <tbody>{rows}</tbody>
+        </Table>
+      </Group>
     </AppShell>
   );
 };
