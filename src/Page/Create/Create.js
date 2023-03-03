@@ -1,42 +1,27 @@
 import React, { useState } from "react";
-import Input from "../../Components/Input/Input";
 import supabase from "../../Config/Config";
-import Button from "../../Components/Button/Button";
+import { Button, Box, TextInput, NumberInput } from "@mantine/core";
 
 const Create = () => {
-  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [sqft, setSqft] = useState(0);
-  const [monthlyPrice, setMonthlyPrice] = useState("");
+  const [price, setPrice] = useState(0);
+  const [quantity, setQuantity] = useState("");
+  const [image, setImage] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    const { data, error } = await supabase.from("apartments").insert({
-      title,
+    const { data, error } = await supabase.from("products").insert({
+      name,
       description,
-      location,
-      sqft,
-      monthly_price: monthlyPrice,
+      price,
+      image,
+      quantity,
     });
     return (
-      setTitle(""),
-      setDescription(""),
-      setLocation(""),
-      setSqft(0),
-      setMonthlyPrice("")
+      setName(""), setDescription(""), setPrice(0), setQuantity(0), setImage("")
     );
-
-    /* if (error) {
-      console.log(error.message);
-    } else {
-      setTitle("");
-      setDescription("");
-      setLocation("");
-      setSqft(0);
-      setMonthlyPrice("");
-    } */
 
     /* const onUploadFile = async (file) => {
       const { data, error } = await supabase.storage
@@ -52,64 +37,56 @@ const Create = () => {
     }; */
   };
   return (
-    <form onSubmit={onSubmit}>
-      <label htmlFor="title">
-        Title:
-        <br />
-        <Input
-          id="title"
+    <Box sx={{ maxWidth: 300 }} mx="auto">
+      <form onSubmit={onSubmit}>
+        <h1>Create product</h1>
+        <TextInput
+          label="Name:"
+          name="name"
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Product name.."
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
-      </label>
-      <br />
-      <label htmlFor="description">
-        Description: <br />
-        <Input
-          id="description"
+        <TextInput
+          label="Description:"
+          name="description"
           type="text"
+          placeholder="Description.."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-      </label>
-      <br />
-      <label htmlFor="location">
-        Location: <br />
-        <Input
-          id="location"
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
+        <NumberInput
+          label="Quantity:"
+          placeholder="Select quantity.."
+          defaultValue={0}
+          value={quantity}
+          onChange={(val) => setQuantity(val)}
         />
-      </label>
-      <br />
-      <label htmlFor="sqft">
-        Sqft: <br />
-        <Input
-          id="sqft"
-          type="number"
-          min="1"
-          max="infinity"
-          value={sqft}
-          onChange={(e) => setSqft(e.target.value)}
+        <NumberInput
+          label="Price:"
+          name="price"
+          placeholder="Enter your price.."
+          value={price}
+          parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+          formatter={(value) =>
+            !Number.isNaN(parseFloat(value))
+              ? `$ ${value}`.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")
+              : "$ "
+          }
+          onChange={(val) => setPrice(val)}
         />
-      </label>
-      <br />
-      <label htmlFor="monthly_price">
-        Monthly price: <br />
-        <Input
-          id="monthly-price"
-          type="text"
-          value={monthlyPrice}
-          className="monthly"
-          onChange={(e) => setMonthlyPrice(e.target.value)}
-        />
-      </label>
-      <br />
-      {/* <Input type="file" onChange={(e) => onUploadFile(e.target.files[0])} /> */}
-      <Button type="submit" text="Add apartment" />
-    </form>
+        <br />
+        <Button
+          type="submit"
+          onClick={onSubmit}
+          variant="gradient"
+          gradient={{ from: "yellow", to: "red" }}
+        >
+          Add product
+        </Button>
+      </form>
+    </Box>
   );
 };
 

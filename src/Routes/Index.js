@@ -15,10 +15,10 @@ const RenderRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<UnAuthorizedUser />}>
-        <Route path="" element={<Dashborad />} />
-        <Route path=":id" element={<Edit />} />
-        <Route path="create" element={<Create />} />
+      <Route path="/" element={<UnAuthorizedUser />}>
+        <Route path="/admin/dashboard" element={<Dashborad />} />
+        <Route path="/admin/dashboard/:id" element={<Edit />} />
+        <Route path="/admin/dashboard/create" element={<Create />} />
       </Route>
       <Route path="/unauthorized" element={<UnAuthorizedUserPage />} />
     </Routes>

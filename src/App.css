@@ -33,7 +33,7 @@
     align-items: center;
 }
 .cart-length-circle {
-  position: absolute; top: 108px; left: 220px;
+  position: relative; top: 80px; left: 200px;
   background-color: orange;
   border-radius: 50%;
   height: 20px;
@@ -89,6 +89,13 @@
   font-size: 20px;
     font-weight: bold;
     background: -webkit-linear-gradient(70deg, yellow, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.dashboard {
+   font-size: 40px;
+    font-weight: bold;
+    background: -webkit-linear-gradient(70deg, red, yellow);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

@@ -34,7 +34,7 @@ const LandingPage = () => {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   const [openedCart, setOpenedCart] = useState(false);
-  const [apartments, setApartments] = useState([]);
+  const [products, setProducts] = useState([]);
   const [cartProducts, setCartProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -93,12 +93,12 @@ const LandingPage = () => {
 
   const fetchData = async () => {
     const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
-    const { data: apartments, error } = await supabase
-      .from("apartments")
+    const { data: products, error } = await supabase
+      .from("products")
       .select("*")
       .range(offset, offset + PRODUCTS_PER_PAGE - 1);
-    setApartments(apartments);
-    console.log(apartments);
+    setProducts(products);
+    console.log(products);
   };
 
   useEffect(() => {
@@ -213,7 +213,7 @@ const LandingPage = () => {
                   {auth.user ? (
                     <Group align="center">
                       <BsFillPersonFill />
-                      {auth.user.email}
+                      {auth.user.user_metadata.full_name}
                       <Drawer
                         opened={openedCart}
                         lockScroll={false}
@@ -230,7 +230,7 @@ const LandingPage = () => {
                             {cartProducts.length === 0 ? (
                               <div
                                 style={{
-                                  height: "9000px",
+                                  height: "870px",
                                   textAlign: "center",
                                 }}
                               >
@@ -240,8 +240,8 @@ const LandingPage = () => {
                               <div
                                 style={{
                                   overflowY: "scroll",
-                                  minHeight: "910px",
-                                  maxHeight: "910px",
+                                  minHeight: "850px",
+                                  maxHeight: "850px",
                                 }}
                               >
                                 {cartProducts.map((product) => (
@@ -261,7 +261,7 @@ const LandingPage = () => {
                           <ShoppingCartFooter
                             total={cartProducts
                               .reduce((acc, cart) => {
-                                return cart.quantity * cart.monthly_price + acc;
+                                return cart.quantity * cart.price + acc;
                               }, 0)
                               .toFixed(2)}
                             checkout={onCheckoutClick}
@@ -339,11 +339,11 @@ const LandingPage = () => {
               justifyContent: "space-around",
             }}
           >
-            {apartments.map((apartment) => {
+            {products.map((product) => {
               return (
                 <ProductCardItem
-                  data={apartment}
-                  key={apartment.id}
+                  data={product}
+                  key={product.id}
                   onAddToCart={addToCart}
                 />
               );

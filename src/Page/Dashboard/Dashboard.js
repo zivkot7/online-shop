@@ -28,23 +28,34 @@ const Dashboard = () => {
 
   const auth = useAuth();
 
-  const [apartments, setApartments] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const rows = apartments.map((apartment) => (
-    <tr key={apartment.id}>
-      <td>{apartment.imageUrl}</td>
-      <td>{apartment.title}</td>
-      <td>{apartment.description}</td>
-      <td>{apartment.location}</td>
-      <td align="center">{apartment.sqft}</td>
-      <td style={{ display: "flex", justifyContent: "space-between" }}>
-        {apartment.monthly_price}
+  const rows = products.map((product) => (
+    <tr key={product.id}>
+      <td width="200px">
+        {
+          /* apartment.imageUrl */ <img
+            src="https://i.imgur.com/ZL52Q2D.png"
+            width="80px"
+          />
+        }
+      </td>
+      <td>{product.name}</td>
+      <td>{product.description}</td>
+      <td
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        ${product.price.toLocaleString()}
         <Group>
           <Button
             size="xs"
             variant="gradient"
             gradient={{ from: "yellow", to: "red" }}
-            onClick={() => deleteData(apartment.id)}
+            onClick={() => deleteData(product.id)}
           >
             Delete
           </Button>
@@ -52,7 +63,7 @@ const Dashboard = () => {
             size="xs"
             variant="gradient"
             gradient={{ from: "yellow", to: "red" }}
-            onClick={() => navigate(apartment.id)}
+            onClick={() => navigate(product.id)}
           >
             Edit
           </Button>
@@ -62,11 +73,11 @@ const Dashboard = () => {
   ));
 
   const fetchData = async () => {
-    const { data: apartments, error } = await supabase
-      .from("apartments")
+    const { data: products, error } = await supabase
+      .from("products")
       .select("*");
-    setApartments(apartments);
-    console.log(apartments);
+    setProducts(products);
+    console.log(products);
 
     /* const { data } = await supabase
       .from("image")
@@ -91,10 +102,10 @@ const Dashboard = () => {
   };
   const deleteData = async (id) => {
     console.log(id);
-    const { error } = await supabase.from("apartments").delete().eq("id", id);
+    const { error } = await supabase.from("products").delete().eq("id", id);
 
-    const newApartments = apartments.filter((apartment) => apartment.id !== id);
-    setApartments(newApartments);
+    const newProducts = products.filter((product) => product.id !== id);
+    setProducts(newProducts);
   };
 
   return (
@@ -188,7 +199,10 @@ const Dashboard = () => {
           </Navbar.Section>
           <Navbar.Section>
             <Group>
-              <p style={{ marginRight: "10px" }}>{auth.user.email}</p>
+              <p style={{ marginRight: "10px" }}>
+                {auth.user.user_metadata.full_name} (
+                {auth.user.user_metadata.role})
+              </p>
               <Button
                 variant="gradient"
                 gradient={{ from: "yellow", to: "red" }}
@@ -220,14 +234,14 @@ const Dashboard = () => {
               />
             </MediaQuery>
 
-            <Text size="30px" fw="bold">
+            <Text size="30px" fw="bold" className="dashboard">
               DASHBOARD...
             </Text>
             <Group>
               <Button
                 variant="gradient"
                 gradient={{ from: "yellow", to: "red" }}
-                onClick={() => navigate("/dashboard/create")}
+                onClick={() => navigate("/admin/dashboard/create")}
               >
                 Create
               </Button>
@@ -249,9 +263,7 @@ const Dashboard = () => {
               <th>Product</th>
               <th>Title</th>
               <th>Description</th>
-              <th>Location</th>
-              <th style={{ textAlign: "center" }}>Sqft</th>
-              <th>Monthly price</th>
+              <th>Price</th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>

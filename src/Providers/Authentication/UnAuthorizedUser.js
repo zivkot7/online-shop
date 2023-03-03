@@ -7,6 +7,10 @@ const UnAuthorizedUser = () => {
   if (!user) {
     return <Navigate to="/unauthorized" />;
   }
+  if (user.user_metadata.role !== "admin") {
+    return <Navigate to="/unauthorized" />;
+  }
+
   return <Outlet />;
 };
 

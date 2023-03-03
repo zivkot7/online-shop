@@ -14,6 +14,7 @@ import { IconEye, IconEyeOff, IconLock } from "@tabler/icons";
 const Login = () => {
   const theme = useMantineTheme();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [type, setType] = useState("password");
   const showPassword = () => {
@@ -35,6 +36,7 @@ const Login = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: user.email,
@@ -48,6 +50,7 @@ const Login = () => {
     } else {
       navigate("/");
     }
+    setLoading(false);
   };
 
   return (
@@ -83,6 +86,7 @@ const Login = () => {
         <Group position="left" mt="md">
           <Button
             type="submit"
+            loading={loading}
             onClick={onSubmit}
             variant="gradient"
             gradient={{ from: "yellow", to: "red" }}
