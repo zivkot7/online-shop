@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom/dist";
+import { Navigate, useNavigate } from "react-router-dom/dist";
 import supabase from "../../Config/Config";
 import {
   Button,
@@ -10,8 +10,10 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { IconEye, IconEyeOff, IconLock } from "@tabler/icons";
+import { useAuth } from "../../Providers/Authentication/Authentication";
 
 const Login = () => {
+  const auth = useAuth();
   const theme = useMantineTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -47,9 +49,10 @@ const Login = () => {
 
     if (error) {
       alert(error.message);
-    } else {
-      navigate("/");
     }
+    auth.user.user_metadata.role === "admin"
+      ? navigate("/admin/dashboard")
+      : navigate("/");
     setLoading(false);
   };
 
