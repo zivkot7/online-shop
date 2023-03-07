@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import supabase from "../../Config/Config";
+import supabase from "../../../Config/Config";
 import { useState, useEffect } from "react";
-import { useAuth } from "../../Providers/Authentication/Authentication";
+import { useAuth } from "../../../Providers/Authentication/Authentication";
 import {
   AppShell,
   Button,
@@ -19,7 +19,7 @@ import {
   Accordion,
   Table,
 } from "@mantine/core";
-import { IconSearch } from "@tabler/icons";
+import { IconPencil, IconSearch, IconTrash } from "@tabler/icons";
 
 const Dashboard = () => {
   const [opened, setOpened] = useState(false);
@@ -29,19 +29,49 @@ const Dashboard = () => {
   const auth = useAuth();
 
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from("categories").select("*");
+      setCategories(data);
+    };
+
+    fetchCategories();
+  }, []);
+
+  const fetchData = async (searchQuery, categoryId) => {
+    let query = supabase.from("products").select("*");
+
+    if (searchQuery) {
+      query = query.or(`name.ilike.%${searchQuery}%`);
+    }
+
+    if (categoryId) {
+      query = query.eq("category_id", categoryId);
+    }
+
+    const { data: products, error } = await query;
+    setProducts(products);
+  };
+  useEffect(() => {
+    fetchData(searchQuery, selectedCategory);
+  }, [searchQuery, selectedCategory]);
+
+  const onSearch = (value) => {
+    setSearchQuery(value);
+  };
 
   const rows = products.map((product) => (
     <tr key={product.id}>
       <td width="200px">
-        {
-          /* apartment.imageUrl */ <img
-            src="https://i.imgur.com/ZL52Q2D.png"
-            width="80px"
-          />
-        }
+        {<img src="https://i.imgur.com/ZL52Q2D.png" width="80px" />}
       </td>
       <td>{product.name}</td>
       <td>{product.description}</td>
+      <td>{product.sale_price}</td>
       <td
         style={{
           display: "flex",
@@ -51,50 +81,26 @@ const Dashboard = () => {
       >
         ${product.price.toLocaleString()}
         <Group>
-          <Button
-            size="xs"
+          <ActionIcon
+            size="md"
+            variant="gradient"
+            gradient={{ from: "yellow", to: "red" }}
+            onClick={() => onEdit(product)}
+          >
+            <IconPencil size="25px" />
+          </ActionIcon>
+          <ActionIcon
+            size="md"
             variant="gradient"
             gradient={{ from: "yellow", to: "red" }}
             onClick={() => deleteData(product.id)}
           >
-            Delete
-          </Button>
-          <Button
-            size="xs"
-            variant="gradient"
-            gradient={{ from: "yellow", to: "red" }}
-            onClick={() => navigate(product.id)}
-          >
-            Edit
-          </Button>
+            <IconTrash size="25px" />
+          </ActionIcon>
         </Group>
       </td>
     </tr>
   ));
-
-  const fetchData = async () => {
-    const { data: products, error } = await supabase
-      .from("products")
-      .select("*");
-    setProducts(products);
-    console.log(products);
-
-    /* const { data } = await supabase
-      .from("image")
-      .select("image, image_jpeg")
-      .eq("id", 0);
-    setApartments(apartments);
-
-    const imageData = data[1].image;
-    const imageType = data[1].image_jpeg;
-
-    const blob = new Blob([imageData], { type: imageType });
-    const imageUrl = URL.createObjectURL(blob); */
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const onLogout = async () => {
     await supabase.auth.signOut();
@@ -106,6 +112,14 @@ const Dashboard = () => {
 
     const newProducts = products.filter((product) => product.id !== id);
     setProducts(newProducts);
+  };
+  const onEdit = async (item) => {
+    navigate(`/admin/dashboard/${item.id}`, { state: item });
+  };
+
+  const showAllProducts = () => {
+    setSelectedCategory("");
+    setSearchQuery("");
   };
 
   return (
@@ -131,6 +145,7 @@ const Dashboard = () => {
             <Input
               mt="20px"
               placeholder="Search for products"
+              onChange={(e) => onSearch(e.target.value)}
               rightSection={
                 <ActionIcon>
                   <IconSearch size="17px" />
@@ -139,6 +154,7 @@ const Dashboard = () => {
             />
             <Button
               mt="30px"
+              onClick={showAllProducts}
               styles={() => ({
                 root: {
                   height: "50px",
@@ -150,52 +166,56 @@ const Dashboard = () => {
                   border: "none",
                   borderBottom: "1px solid lightgrey",
                   borderRadius: "0px",
+                  "&:not([data-disabled])": theme.fn.hover({
+                    backgroundColor: "#fafafa",
+                  }),
                 },
-                "&:hover": { backgroundColor: "#fafafa" },
               })}
             >
               Products
             </Button>
-            <Accordion defaultValue="navbar">
-              <Accordion.Item value="kategories">
-                <Accordion.Control>Kategories</Accordion.Control>
+            <Accordion defaultValue="categories">
+              <Accordion.Item value="categories">
+                <Accordion.Control>Categories</Accordion.Control>
                 <Accordion.Panel>
-                  <Radio.Group orientation="vertical" spacing="md" size="md">
-                    <Radio value="kat1" label="1 child link" />
-                    <Radio value="kat2" label="2 child link" />
-                    <Radio value="kat3" label="3 child link" />
-                    <Radio value="kat4" label="4 child link" />
-                    <Radio value="kat5" label="5 child link" />
-                    <Radio value="kat6" label="6 child link" />
-                    <Radio value="kat7" label="7 child link" />
-                    <Radio value="kat8" label="8 child link" />
-                    <Radio value="kat9" label="9 child link" />
-                    <Radio value="kat10" label="10 child link" />
+                  <Radio.Group
+                    orientation="vertical"
+                    spacing="md"
+                    size="md"
+                    value={selectedCategory}
+                    onChange={(value) => setSelectedCategory(value)}
+                  >
+                    {categories.map((category) => (
+                      <Radio
+                        key={category.id}
+                        value={category.id}
+                        label={category.name}
+                      />
+                    ))}
                   </Radio.Group>
                 </Accordion.Panel>
               </Accordion.Item>
-              <Button
-                styles={() => ({
-                  root: {
-                    height: "50px",
-                    padding: "15px 200px 15px 20px",
-                    color: "black",
-                    fontWeight: "normal",
-                    fontSize: "16px",
-                    backgroundColor: "white",
-                    border: "none",
-                    borderBottom: "1px solid lightgrey",
-                    borderRadius: "0px",
-                    "&:hover": {
-                      transition: "0.2s",
-                      backgroundColor: "#fafafa",
-                    },
-                  },
-                })}
-              >
-                Orders
-              </Button>
             </Accordion>
+            <Button
+              styles={() => ({
+                root: {
+                  height: "50px",
+                  padding: "15px 200px 15px 20px",
+                  color: "black",
+                  fontWeight: "normal",
+                  fontSize: "16px",
+                  backgroundColor: "white",
+                  border: "none",
+                  borderBottom: "1px solid lightgrey",
+                  borderRadius: "0px",
+                  "&:not([data-disabled])": theme.fn.hover({
+                    backgroundColor: "#fafafa",
+                  }),
+                },
+              })}
+            >
+              Orders
+            </Button>
           </Navbar.Section>
           <Navbar.Section>
             <Group>
@@ -263,6 +283,7 @@ const Dashboard = () => {
               <th>Product</th>
               <th>Title</th>
               <th>Description</th>
+              <th>Sale price</th>
               <th>Price</th>
             </tr>
           </thead>

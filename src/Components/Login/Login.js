@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom/dist";
+import { useNavigate } from "react-router-dom/dist";
 import supabase from "../../Config/Config";
 import {
   Button,
@@ -50,7 +50,7 @@ const Login = () => {
     if (error) {
       alert(error.message);
     }
-    auth.user.user_metadata.role === "admin"
+    auth?.user.user_metadata.role === "admin"
       ? navigate("/admin/dashboard")
       : navigate("/");
     setLoading(false);

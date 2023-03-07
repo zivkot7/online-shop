@@ -1,13 +1,13 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import Register from "../Page/Register/Register";
+import Register from "../Components/Register/Register";
 import LandingPage from "../Page/LandingPage/LandingPage";
-import Login from "../Page/Login/Login";
-import Dashborad from "../Page/Dashboard/Dashboard";
-import Edit from "../Page/Edit/Edit";
-import Create from "../Page/Create/Create";
+import Login from "../Components/Login/Login";
+import Dashborad from "../Page/Admin/Dashboard/Dashboard";
+import Edit from "../Page/Admin/Edit/Edit";
 import UnAuthorizedUser from "../Providers/Authentication/UnAuthorizedUser";
 import UnAuthorizedUserPage from "../Page/UnAuthorizedUserPage/UnAuthorizedUserPage";
+import Create from "../Page/Admin/Create/Create";
 
 const RenderRoutes = () => {
   return (

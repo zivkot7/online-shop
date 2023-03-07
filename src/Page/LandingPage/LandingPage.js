@@ -32,6 +32,7 @@ const PRODUCTS_PER_PAGE = 10;
 
 const LandingPage = () => {
   const theme = useMantineTheme();
+
   const [opened, setOpened] = useState(false);
   const [openedCart, setOpenedCart] = useState(false);
   const [products, setProducts] = useState([]);
@@ -98,7 +99,7 @@ const LandingPage = () => {
       .select("*")
       .range(offset, offset + PRODUCTS_PER_PAGE - 1);
     setProducts(products);
-    console.log(products);
+    /* console.log(products); */
   };
 
   useEffect(() => {
@@ -115,7 +116,23 @@ const LandingPage = () => {
   const hideCart = () => {
     setOpenedCart(!openedCart);
   };
-  const onCheckoutClick = () => {
+  const onCheckoutClick = async () => {
+    const total = cartProducts.reduce((acc, cart) => {
+      return cart.quantity * cart.price + acc;
+    }, 0);
+
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({
+        user_id: auth.user.id,
+        total: total,
+      })
+      .single();
+    if (error) {
+      console.error(error);
+      return;
+    }
+
     return showNotification({
       icon: <IconCheck size={18} />,
       color: "green",
@@ -145,20 +162,20 @@ const LandingPage = () => {
           >
             <Text>
               <Accordion defaultValue="navbar">
-                <Accordion.Item value="kategories">
-                  <Accordion.Control>Kategories</Accordion.Control>
+                <Accordion.Item value="categories">
+                  <Accordion.Control>Categories</Accordion.Control>
                   <Accordion.Panel>
                     <Radio.Group orientation="vertical" spacing="md" size="md">
-                      <Radio value="kat1" label="1 child link" />
-                      <Radio value="kat2" label="2 child link" />
-                      <Radio value="kat3" label="3 child link" />
-                      <Radio value="kat4" label="4 child link" />
-                      <Radio value="kat5" label="5 child link" />
-                      <Radio value="kat6" label="6 child link" />
-                      <Radio value="kat7" label="7 child link" />
-                      <Radio value="kat8" label="8 child link" />
-                      <Radio value="kat9" label="9 child link" />
-                      <Radio value="kat10" label="10 child link" />
+                      <Radio value="cat1" label="1 child link" />
+                      <Radio value="cat2" label="2 child link" />
+                      <Radio value="cat3" label="3 child link" />
+                      <Radio value="cat4" label="4 child link" />
+                      <Radio value="cat5" label="5 child link" />
+                      <Radio value="cat6" label="6 child link" />
+                      <Radio value="cat7" label="7 child link" />
+                      <Radio value="cat8" label="8 child link" />
+                      <Radio value="cat9" label="9 child link" />
+                      <Radio value="cat10" label="10 child link" />
                     </Radio.Group>
                   </Accordion.Panel>
                 </Accordion.Item>
@@ -352,7 +369,7 @@ const LandingPage = () => {
           {
             <Pagination
               mt="100px"
-              total={2}
+              total={10}
               onChange={onPageChange}
               position="center"
               styles={{
@@ -361,7 +378,7 @@ const LandingPage = () => {
                     from: "yellow",
                     to: "red",
                   }),
-                  "&:last-child, &:first-child": { backgroundImage: "none" },
+                  "&:last-child, &:first-of-type": { backgroundImage: "none" },
                 },
               }}
             />
