@@ -69,7 +69,7 @@ const mockdata = [
 
 const ProductCardItem = (props) => {
   const [opened, { close, open }] = useDisclosure(false);
-  const { title, description, location, sqft, monthly_price, image, onClick } =
+  const { name, description, quantity, sale_price, price, image, onClick } =
     props.data;
   const { classes } = useStyles();
   const features = mockdata.map((feature) => (
@@ -92,7 +92,7 @@ const ProductCardItem = (props) => {
 
         <Group position="apart" mt="md">
           <div>
-            <Text weight={500}>{title}</Text>
+            <Text weight={500}>{name}</Text>
             <Text size="xs" color="dimmed">
               {description}
             </Text>
@@ -116,7 +116,7 @@ const ProductCardItem = (props) => {
           <Group spacing={30}>
             <div>
               <Text size="md" weight={700} sx={{ lineHeight: 1 }}>
-                ${monthly_price}
+                ${price}
               </Text>
               <Text
                 size="xs"
@@ -153,7 +153,7 @@ const ProductCardItem = (props) => {
 
           <Group position="apart" mt="md">
             <div>
-              <Text weight={500}>{title}</Text>
+              <Text weight={500}>{name}</Text>
               <Text size="xs" color="dimmed">
                 {description}
               </Text>
@@ -177,7 +177,7 @@ const ProductCardItem = (props) => {
             <Group spacing={30}>
               <div>
                 <Text size="md" weight={700} sx={{ lineHeight: 1 }}>
-                  ${monthly_price}
+                  ${price}
                 </Text>
                 <Text
                   size="xs"

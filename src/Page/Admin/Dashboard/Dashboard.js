@@ -33,6 +33,8 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  console.log(products);
+
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase.from("categories").select("*");

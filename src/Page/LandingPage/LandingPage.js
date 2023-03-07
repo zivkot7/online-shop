@@ -38,11 +38,51 @@ const LandingPage = () => {
   const [products, setProducts] = useState([]);
   const [cartProducts, setCartProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  console.log(products.name);
 
   const navigate = useNavigate();
 
   const auth = useAuth();
   /* console.log(auth); */
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from("categories").select("*");
+      setCategories(data);
+    };
+
+    fetchCategories();
+  }, []);
+
+  const fetchData = async (searchQuery, categoryId) => {
+    const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    let query = supabase
+      .from("products")
+      .select("*")
+      .range(offset, offset + PRODUCTS_PER_PAGE - 1);
+
+    if (searchQuery) {
+      query = query.or(`name.ilike.%${searchQuery}%`);
+    }
+
+    if (categoryId) {
+      query = query.eq("category_id", categoryId);
+    }
+
+    const { data: products, error } = await query;
+    setProducts(products);
+  };
+  useEffect(() => {
+    fetchData(searchQuery, selectedCategory);
+  }, [searchQuery, selectedCategory]);
+
+  const onSearch = (value) => {
+    setSearchQuery(value);
+  };
 
   const addToCart = (product) => {
     const isExists = cartProducts.some((cart) => {
@@ -92,15 +132,15 @@ const LandingPage = () => {
     setCurrentPage(newPage);
   };
 
-  const fetchData = async () => {
+  /*  const fetchData = async () => {
     const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
     const { data: products, error } = await supabase
       .from("products")
       .select("*")
       .range(offset, offset + PRODUCTS_PER_PAGE - 1);
     setProducts(products);
-    /* console.log(products); */
-  };
+     console.log(products); 
+  } */
 
   useEffect(() => {
     fetchData();
@@ -140,6 +180,10 @@ const LandingPage = () => {
       message: "Your order is submited! 🙂",
     });
   };
+  const showAllProducts = () => {
+    setSelectedCategory("");
+    setSearchQuery("");
+  };
   return (
     <div>
       <AppShell
@@ -160,27 +204,50 @@ const LandingPage = () => {
             hidden={!opened}
             width={{ sm: 200, lg: 300 }}
           >
-            <Text>
-              <Accordion defaultValue="navbar">
-                <Accordion.Item value="categories">
-                  <Accordion.Control>Categories</Accordion.Control>
-                  <Accordion.Panel>
-                    <Radio.Group orientation="vertical" spacing="md" size="md">
-                      <Radio value="cat1" label="1 child link" />
-                      <Radio value="cat2" label="2 child link" />
-                      <Radio value="cat3" label="3 child link" />
-                      <Radio value="cat4" label="4 child link" />
-                      <Radio value="cat5" label="5 child link" />
-                      <Radio value="cat6" label="6 child link" />
-                      <Radio value="cat7" label="7 child link" />
-                      <Radio value="cat8" label="8 child link" />
-                      <Radio value="cat9" label="9 child link" />
-                      <Radio value="cat10" label="10 child link" />
-                    </Radio.Group>
-                  </Accordion.Panel>
-                </Accordion.Item>
-              </Accordion>
-            </Text>
+            <Button
+              mt="10px"
+              onClick={showAllProducts}
+              styles={() => ({
+                root: {
+                  height: "50px",
+                  padding: "15px 185px 5px 20px",
+                  color: "black",
+                  fontWeight: "normal",
+                  fontSize: "16px",
+                  backgroundColor: "white",
+                  border: "none",
+                  borderBottom: "1px solid lightgrey",
+                  borderRadius: "0px",
+                  "&:not([data-disabled])": theme.fn.hover({
+                    backgroundColor: "#fafafa",
+                  }),
+                },
+              })}
+            >
+              Products
+            </Button>
+            <Accordion defaultValue="categories">
+              <Accordion.Item value="categories">
+                <Accordion.Control>Categories</Accordion.Control>
+                <Accordion.Panel>
+                  <Radio.Group
+                    orientation="vertical"
+                    spacing="md"
+                    size="md"
+                    value={selectedCategory}
+                    onChange={(value) => setSelectedCategory(value)}
+                  >
+                    {categories.map((category) => (
+                      <Radio
+                        key={category.id}
+                        value={category.id}
+                        label={category.name}
+                      />
+                    ))}
+                  </Radio.Group>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
           </Navbar>
         }
         header={
@@ -219,6 +286,7 @@ const LandingPage = () => {
                       ml="180px"
                       style={{ width: "600px" }}
                       placeholder="Search for products"
+                      onChange={(e) => onSearch(e.target.value)}
                       rightSection={
                         <ActionIcon>
                           <IconSearch size="17px" />
