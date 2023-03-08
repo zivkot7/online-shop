@@ -27,6 +27,7 @@ import ProductCardItem from "../../Components/ProductCardItem/ProductCardItem";
 import ShoppingCartHeader from "../../Components/ShoppingCart/ShoppingCartHeader";
 import ShoppingCartItem from "../../Components/ShoppingCart/ShoppingCartItem";
 import ShoppingCartFooter from "../../Components/ShoppingCart/ShoppingCartFooter";
+import { useDebouncedState } from "@mantine/hooks";
 
 const PRODUCTS_PER_PAGE = 10;
 
@@ -40,9 +41,8 @@ const LandingPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  console.log(products.name);
+  const [searchQuery, setSearchQuery] = useDebouncedState("", 500);
+  const [totalPages, setTotalPages] = useState(0);
 
   const navigate = useNavigate();
 
@@ -62,7 +62,9 @@ const LandingPage = () => {
     const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
     let query = supabase
       .from("products")
-      .select("*")
+      .select("*", {
+        count: "exact",
+      })
       .range(offset, offset + PRODUCTS_PER_PAGE - 1);
 
     if (searchQuery) {
@@ -73,12 +75,23 @@ const LandingPage = () => {
       query = query.eq("category_id", categoryId);
     }
 
-    const { data: products, error } = await query;
+    const { data: products, count, error } = await query;
     setProducts(products);
+    setTotalPages(Math.ceil(count / PRODUCTS_PER_PAGE));
+    console.log(count);
   };
+
   useEffect(() => {
     fetchData(searchQuery, selectedCategory);
-  }, [searchQuery, selectedCategory]);
+    const savedCartProducts = JSON.parse(localStorage.getItem("cartProducts"));
+    if (savedCartProducts) {
+      setCartProducts(savedCartProducts);
+    }
+  }, [searchQuery, selectedCategory, currentPage]);
+
+  useEffect(() => {
+    localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
+  }, [cartProducts]);
 
   const onSearch = (value) => {
     setSearchQuery(value);
@@ -132,27 +145,6 @@ const LandingPage = () => {
     setCurrentPage(newPage);
   };
 
-  /*  const fetchData = async () => {
-    const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
-    const { data: products, error } = await supabase
-      .from("products")
-      .select("*")
-      .range(offset, offset + PRODUCTS_PER_PAGE - 1);
-    setProducts(products);
-     console.log(products); 
-  } */
-
-  useEffect(() => {
-    fetchData();
-    const savedCartProducts = JSON.parse(localStorage.getItem("cartProducts"));
-    if (savedCartProducts) {
-      setCartProducts(savedCartProducts);
-    }
-  }, [currentPage]);
-
-  useEffect(() => {
-    localStorage.setItem("cartProducts", JSON.stringify(cartProducts));
-  }, [cartProducts]);
   const hideCart = () => {
     setOpenedCart(!openedCart);
   };
@@ -437,7 +429,7 @@ const LandingPage = () => {
           {
             <Pagination
               mt="100px"
-              total={10}
+              total={totalPages}
               onChange={onPageChange}
               position="center"
               styles={{

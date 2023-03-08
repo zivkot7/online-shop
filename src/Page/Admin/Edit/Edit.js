@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { NumberInput, Select, TextInput } from "@mantine/core";
-import { Group, Button } from "@mantine/core";
+import { useLocation, useNavigate } from "react-router-dom";
+import { NumberInput, Select, TextInput, Group, Checkbox } from "@mantine/core";
+import { Box, Button } from "@mantine/core";
 import supabase from "../../../Config/Config";
 import { useForm } from "@mantine/form";
 
 const Edit = () => {
+  const navigate = useNavigate();
   const { state } = useLocation();
   /* console.log(state); */
   const [categories, setCategories] = useState([]);
+  const [isSale, setSale] = useState(state.is_sale);
 
   const form = useForm({
     initialValues: {
@@ -17,12 +19,17 @@ const Edit = () => {
       price: "",
       quantity: "",
       category: "",
+      salePercentage: 0,
       sale_price: "",
-      salePercentage: "",
     },
   });
 
-  const { name, description, price, quantity, category } = form.values;
+  const percentage = Math.round(
+    ((state?.price - state?.sale_price) / state?.price) * 100
+  );
+
+  const { name, description, price, salePercentage, quantity, category } =
+    form.values;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -33,49 +40,8 @@ const Edit = () => {
     fetchCategories();
   }, []);
 
-  const onUpdateProductName = async () => {
-    if (!name) {
-      console.log("fali ime");
-      return;
-    }
-    if (!state || !state.id) {
-      console.log("fali ID");
-      return;
-    }
-    const { data, error } = await supabase
-      .from("products")
-      .update({ name: name })
-      .match({ id: state?.id });
-  };
-  const onUpdateProductDescription = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .update({ description: description })
-      .match({ id: state?.id });
-  };
-
-  const onUpdateProductPrice = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .update({ price: price })
-      .match({ id: state?.id });
-  };
-
-  const onUpdateProductQuantity = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .update({ quantity: quantity })
-      .match({ id: state?.id });
-  };
-
-  const onUpdateProductCategory = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .update({ category_id: category })
-      .match({ id: state?.id });
-  };
-
   const updateAll = async () => {
+    let total = state.price - Math.floor((salePercentage / 100) * state.price);
     const { data, error } = await supabase
       .from("products")
       .update({
@@ -84,12 +50,23 @@ const Edit = () => {
         price: price || undefined,
         quantity: quantity || undefined,
         category_id: category || undefined,
+        sale_price: total,
       })
       .match({ id: state?.id });
   };
+  const onSale = async (e) => {
+    setSale(!isSale);
+    const { data, error } = await supabase
+      .from("products")
+      .update({ is_sale: !isSale })
+      .match({ id: state.id });
+  };
+  const onDashboard = () => {
+    navigate("/admin/dashboard");
+  };
 
   return (
-    <>
+    <Box sx={{ maxWidth: 300 }} mx="auto">
       <h2>Edit product</h2>
       <form onSubmit={form.onSubmit(updateAll)}>
         <TextInput
@@ -97,15 +74,14 @@ const Edit = () => {
           placeholder="Enter new product name.."
           {...form.getInputProps("name")}
         />
-        <Button onClick={onUpdateProductName}>Edit product</Button>
         <TextInput
-          label={`Description: ${state?.description}`}
+          label={`Description: `}
           placeholder="Enter new product description.."
           {...form.getInputProps("description")}
         />
-        <Button onClick={onUpdateProductDescription}>Edit description</Button>
         <NumberInput
           label={`Price: $ ${state?.price}`}
+          min={0}
           placeholder="Enter new product price.."
           parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
           formatter={(value) =>
@@ -115,14 +91,27 @@ const Edit = () => {
           }
           {...form.getInputProps("price")}
         />
-        <Button onClick={onUpdateProductPrice}>Edit price</Button>
         <NumberInput
+          min={0}
           label={`Quantity: ${state?.quantity}`}
           placeholder="Enter new product quantity.."
           defaultValue={0}
           {...form.getInputProps("quantity")}
         />
-        <Button onClick={onUpdateProductQuantity}>Edit quantity</Button>
+        <NumberInput
+          min={0}
+          max={99}
+          label={`Current sale: ${state.is_sale ? percentage : ""}%`}
+          {...form.getInputProps("salePercentage")}
+        />
+
+        <Checkbox
+          mb="20px"
+          mt="5px"
+          checked={isSale}
+          onChange={onSale}
+          label="Sale"
+        />
 
         <Select
           label={`Category: ${state?.category_id}`}
@@ -133,11 +122,20 @@ const Edit = () => {
           }))}
           {...form.getInputProps("category")}
         />
-        <Button onClick={onUpdateProductCategory}>Edit Category</Button>
 
-        <Button type="submit">Update All</Button>
+        <Button
+          mt="20px"
+          variant="gradient"
+          gradient={{ from: "yellow", to: "red" }}
+          type="submit"
+        >
+          Update All
+        </Button>
       </form>
-    </>
+      <Button mb="20px" onClick={onDashboard}>
+        Back to dashboard
+      </Button>
+    </Box>
   );
 };
 

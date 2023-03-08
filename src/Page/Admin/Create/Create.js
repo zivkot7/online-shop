@@ -9,13 +9,13 @@ import {
   Text,
   Select,
 } from "@mantine/core";
-import { useMantineTheme } from "@mantine/hooks";
-import { createClient } from "@supabase/supabase-js";
 import supabase from "../../../Config/Config";
 import { useForm } from "@mantine/form";
 import { useAuth } from "../../../Providers/Authentication/Authentication";
+import { useNavigate } from "react-router-dom";
 
 const Create = () => {
+  const navigate = useNavigate();
   const auth = useAuth();
   const [file, setFile] = useState("");
   const [newCategory, setNewCategory] = useState("");
@@ -92,6 +92,10 @@ const Create = () => {
     console.log(data); */
   };
 
+  const onDashboard = () => {
+    navigate("/admin/dashboard");
+  };
+
   return (
     <Box sx={{ maxWidth: 300 }} mx="auto">
       <h1>Create category</h1>
@@ -125,6 +129,7 @@ const Create = () => {
         <NumberInput
           label="Price:"
           placeholder="Enter your price.."
+          min={1}
           parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
           formatter={(value) =>
             !Number.isNaN(parseFloat(value))
@@ -137,6 +142,7 @@ const Create = () => {
           label="Quantity:"
           placeholder="Select quantity.."
           defaultValue={0}
+          min={1}
           {...form.getInputProps("quantity")}
         />
         <Select
@@ -172,6 +178,9 @@ const Create = () => {
           Add product
         </Button>
       </form>
+      <Button mt="20px" onClick={onDashboard}>
+        Back to dashboard
+      </Button>
     </Box>
   );
 };

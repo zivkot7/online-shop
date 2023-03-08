@@ -15,11 +15,13 @@ import {
   Input,
   Group,
   ActionIcon,
-  Radio,
-  Accordion,
   Table,
+  Modal,
+  TextInput,
 } from "@mantine/core";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons";
+import { useDisclosure } from "@mantine/hooks";
+import { useForm } from "@mantine/form";
 
 const Dashboard = () => {
   const [opened, setOpened] = useState(false);
@@ -30,10 +32,18 @@ const Dashboard = () => {
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(false);
+  const [showCategories, setShowCategories] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [openedModal, { open, close }] = useDisclosure(false);
+  const [categoryId, setCategoryId] = useState(null);
 
-  console.log(products);
+  const form = useForm({
+    initialValues: {
+      name: "",
+      description: "",
+    },
+  });
+  const { name, description } = form.values;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -59,8 +69,8 @@ const Dashboard = () => {
     setProducts(products);
   };
   useEffect(() => {
-    fetchData(searchQuery, selectedCategory);
-  }, [searchQuery, selectedCategory]);
+    fetchData(searchQuery);
+  }, [searchQuery]);
 
   const onSearch = (value) => {
     setSearchQuery(value);
@@ -73,7 +83,7 @@ const Dashboard = () => {
       </td>
       <td>{product.name}</td>
       <td>{product.description}</td>
-      <td>{product.sale_price}</td>
+      <td>$ {product.sale_price}</td>
       <td
         style={{
           display: "flex",
@@ -81,7 +91,7 @@ const Dashboard = () => {
           alignItems: "center",
         }}
       >
-        ${product.price.toLocaleString()}
+        ${product.price}
         <Group>
           <ActionIcon
             size="md"
@@ -103,10 +113,69 @@ const Dashboard = () => {
       </td>
     </tr>
   ));
+  const categoriesRows = categories.map((category) => (
+    <tr key={category.id}>
+      <td>{category.name}</td>
+      <td>{category.id}</td>
+      <td>{category.description}</td>
+      <td>{category.created_at}</td>
+      <td>{category.updated_at}</td>
+      <td
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {category.user_id}
+        <Group>
+          <ActionIcon
+            size="md"
+            variant="gradient"
+            gradient={{ from: "yellow", to: "red" }}
+            onClick={() => {
+              setCategoryId(category.id);
+              open();
+            }}
+          >
+            <IconPencil size="25px" />
+          </ActionIcon>
+          <ActionIcon
+            size="md"
+            variant="gradient"
+            gradient={{ from: "yellow", to: "red" }}
+            onClick={() => deleteCategory(category.id)}
+          >
+            <IconTrash size="25px" />
+          </ActionIcon>
+        </Group>
+      </td>
+    </tr>
+  ));
+  const updateCategory = async (id) => {
+    const { data, error } = await supabase
+      .from("categories")
+      .update({
+        name: name,
+        description: description,
+      })
+      .match({ id: categoryId });
+
+    if (!error) {
+      window.location.reload();
+    }
+  };
 
   const onLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
+  };
+  const deleteCategory = async (id) => {
+    console.log(id);
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+
+    const newCategories = categories.filter((category) => category.id !== id);
+    setProducts(newCategories);
   };
   const deleteData = async (id) => {
     console.log(id);
@@ -119,8 +188,12 @@ const Dashboard = () => {
     navigate(`/admin/dashboard/${item.id}`, { state: item });
   };
 
-  const showAllProducts = () => {
-    setSelectedCategory("");
+  const onCategoryClick = () => {
+    setShowCategories(true);
+  };
+
+  const onProductClick = () => {
+    setShowCategories(false);
     setSearchQuery("");
   };
 
@@ -156,7 +229,7 @@ const Dashboard = () => {
             />
             <Button
               mt="30px"
-              onClick={showAllProducts}
+              onClick={onProductClick}
               styles={() => ({
                 root: {
                   height: "50px",
@@ -176,28 +249,27 @@ const Dashboard = () => {
             >
               Products
             </Button>
-            <Accordion defaultValue="categories">
-              <Accordion.Item value="categories">
-                <Accordion.Control>Categories</Accordion.Control>
-                <Accordion.Panel>
-                  <Radio.Group
-                    orientation="vertical"
-                    spacing="md"
-                    size="md"
-                    value={selectedCategory}
-                    onChange={(value) => setSelectedCategory(value)}
-                  >
-                    {categories.map((category) => (
-                      <Radio
-                        key={category.id}
-                        value={category.id}
-                        label={category.name}
-                      />
-                    ))}
-                  </Radio.Group>
-                </Accordion.Panel>
-              </Accordion.Item>
-            </Accordion>
+            <Button
+              onClick={onCategoryClick}
+              styles={() => ({
+                root: {
+                  height: "50px",
+                  padding: "15px 173px 15px 20px",
+                  color: "black",
+                  fontWeight: "normal",
+                  fontSize: "16px",
+                  backgroundColor: "white",
+                  border: "none",
+                  borderBottom: "1px solid lightgrey",
+                  borderRadius: "0px",
+                  "&:not([data-disabled])": theme.fn.hover({
+                    backgroundColor: "#fafafa",
+                  }),
+                },
+              })}
+            >
+              Categories
+            </Button>
             <Button
               styles={() => ({
                 root: {
@@ -257,7 +329,7 @@ const Dashboard = () => {
             </MediaQuery>
 
             <Text size="30px" fw="bold" className="dashboard">
-              DASHBOARD...
+              DASHBOARD
             </Text>
             <Group>
               <Button
@@ -272,26 +344,73 @@ const Dashboard = () => {
         </Header>
       }
     >
-      <Group display="block">
-        <Table
-          striped={true}
-          withBorder
-          highlightOnHover
-          withColumnBorders
-          verticalSpacing="md"
-        >
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Sale price</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>{rows}</tbody>
-        </Table>
-      </Group>
+      {!showCategories ? (
+        <Group display="block">
+          <Table
+            striped={true}
+            withBorder
+            highlightOnHover
+            withColumnBorders
+            verticalSpacing="md"
+          >
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Sale price</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+          </Table>
+        </Group>
+      ) : (
+        <Group display="block">
+          <Table
+            striped={true}
+            withBorder
+            highlightOnHover
+            withColumnBorders
+            verticalSpacing="md"
+          >
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Description</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>User ID</th>
+              </tr>
+            </thead>
+            <tbody>{categoriesRows}</tbody>
+          </Table>
+          <Modal
+            size="xl"
+            opened={openedModal}
+            centered
+            onClose={close}
+            title="Edit Category"
+          >
+            <form onSubmit={form.onSubmit(updateCategory)}>
+              <TextInput
+                label={`New category name: `}
+                placeholder="Enter new category name.."
+                {...form.getInputProps("name")}
+              />
+              <TextInput
+                label={`Enter new description: `}
+                placeholder="Enter new category name.."
+                {...form.getInputProps("description")}
+              />
+              <Button mt="20px" type="submit" onClick={close}>
+                Save
+              </Button>
+            </form>
+          </Modal>
+        </Group>
+      )}
     </AppShell>
   );
 };
