@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { NumberInput, Select, TextInput, Group, Checkbox } from "@mantine/core";
 import { Box, Button } from "@mantine/core";
 import supabase from "../../../Config/Config";
@@ -62,27 +62,36 @@ const Edit = () => {
       .match({ id: state.id });
   };
   const onDashboard = () => {
-    navigate("/admin/dashboard");
+    navigate("/admin/dashboard/products");
   };
+  const params = useParams();
+  const getProduct = async (id) => {
+    const { data } = await supabase
+      .from("products")
+      .select()
+      .match({ id: id })
+      .single();
+    /* console.log(data); */
+    form.setValues(data);
+  };
+  useEffect(() => {
+    getProduct(params.id);
+    /* console.log(params.id); */
+  }, []);
 
   return (
     <Box sx={{ maxWidth: 300 }} mx="auto">
       <h2>Edit product</h2>
       <form onSubmit={form.onSubmit(updateAll)}>
-        <TextInput
-          label={`Product name: ${state?.name}`}
-          placeholder="Enter new product name.."
-          {...form.getInputProps("name")}
-        />
+        <TextInput label={`Product name: `} {...form.getInputProps("name")} />
         <TextInput
           label={`Description: `}
           placeholder="Enter new product description.."
           {...form.getInputProps("description")}
         />
         <NumberInput
-          label={`Price: $ ${state?.price}`}
+          label={`Price: `}
           min={0}
-          placeholder="Enter new product price.."
           parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
           formatter={(value) =>
             !Number.isNaN(parseFloat(value))
@@ -93,8 +102,7 @@ const Edit = () => {
         />
         <NumberInput
           min={0}
-          label={`Quantity: ${state?.quantity}`}
-          placeholder="Enter new product quantity.."
+          label={`Quantity: `}
           defaultValue={0}
           {...form.getInputProps("quantity")}
         />
@@ -114,13 +122,12 @@ const Edit = () => {
         />
 
         <Select
-          label={`Category: ${state?.category_id}`}
-          placeholder="Enter new product category.."
+          label={`Category: `}
           data={categories.map((category) => ({
             value: category.id,
             label: category.name,
           }))}
-          {...form.getInputProps("category")}
+          {...form.getInputProps("category_id")}
         />
 
         <Button
