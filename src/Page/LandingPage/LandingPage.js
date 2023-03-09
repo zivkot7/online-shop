@@ -218,7 +218,7 @@ const LandingPage = () => {
             >
               Products
             </Button>
-            <Accordion defaultValue="categories">
+            <Accordion defaultValue={categories}>
               <Accordion.Item value="categories">
                 <Accordion.Control>Categories</Accordion.Control>
                 <Accordion.Panel>

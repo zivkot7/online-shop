@@ -18,18 +18,27 @@ const Create = () => {
   const navigate = useNavigate();
   const auth = useAuth();
   const [file, setFile] = useState("");
-  const [newCategory, setNewCategory] = useState("");
   const [categories, setCategories] = useState([]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase.from("categories").select("*");
       setCategories(data);
-      console.log(data);
+      /* console.log(data); */
     };
 
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    setData(
+      categories.map((category) => ({
+        value: category.id,
+        label: category.name,
+      }))
+    );
+  }, [categories]);
 
   const form = useForm({
     initialValues: {
@@ -42,29 +51,27 @@ const Create = () => {
     },
   });
 
-  const { image, name, description, price, quantity } = form.values;
-
-  const onHandleCategorySubmit = async (event) => {
-    event.preventDefault();
-
+  const { image, name, description, price, quantity, category, user_id } =
+    form.values;
+  const createCategory = async (name) => {
     const { data: categories } = await supabase
       .from("categories")
-      .insert({ name: newCategory, user_id: auth.user.id });
+      .insert({ name: name, user_id: auth.user.id });
   };
 
   const onHandleSubmit = async () => {
+    let categoryId;
+
     const { data: categories } = await supabase
       .from("categories")
       .select("*")
-      .eq("name", newCategory)
+      .eq("name", category)
       .single();
-
-    let categoryId;
 
     if (!categories) {
       const { data: addCategory } = await supabase
         .from("categories")
-        .insert({ name: newCategory });
+        .insert({ name: category });
 
       categoryId = addCategory?.id;
     } else {
@@ -77,20 +84,21 @@ const Create = () => {
       price,
       quantity,
       category_id: categoryId,
+      user_id: auth.user.id,
     });
   };
-  const onUploadFile = async (file) => {
+  /* const onUploadFile = async (file) => {
     const { data, error } = await supabase.storage
       .from("products")
       .upload(file.name, file, { cacheControl: "3600", upsert: false });
     console.log(data);
 
-    /* const { data: finalData } = supabase.storage
+    const { data: finalData } = supabase.storage
       .from("products")
       .getPublicUrl(data);
     setFile(finalData);
-    console.log(data); */
-  };
+    console.log(data);
+  }; */
 
   const onDashboard = () => {
     navigate("/admin/dashboard");
@@ -98,22 +106,6 @@ const Create = () => {
 
   return (
     <Box sx={{ maxWidth: 300 }} mx="auto">
-      <h1>Create category</h1>
-      <Group>
-        <TextInput
-          label="New Category:"
-          placeholder="New Category.."
-          onChange={(e) => setNewCategory(e.target.value)}
-        />
-        <Button
-          type="submit"
-          variant="gradient"
-          onClick={onHandleCategorySubmit}
-          gradient={{ from: "yellow", to: "red" }}
-        >
-          Create category
-        </Button>
-      </Group>
       <h1>Create product</h1>
       <form onSubmit={form.onSubmit(onHandleSubmit)}>
         <TextInput
@@ -147,16 +139,22 @@ const Create = () => {
         />
         <Select
           label="Category:"
-          data={categories.map((category) => ({
-            value: category.id,
-            label: category.name,
-          }))}
+          data={data}
+          creatable
+          searchable
+          getCreateLabel={(query) => `+ Create ${query}`}
+          onCreate={async (query) => {
+            const item = { value: query, label: query };
+            setData((current) => [...current, item]);
+            await createCategory(query);
+            return item;
+          }}
           {...form.getInputProps("category")}
         />
         <br />
         <Group position="center">
           <FileButton
-            onChange={onUploadFile}
+            /* onChange={onUploadFile} */
             accept="image/png,image/jpeg,image/jpg"
           >
             {(props) => <Button {...props}>Upload image</Button>}
