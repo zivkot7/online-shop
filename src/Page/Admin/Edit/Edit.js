@@ -8,7 +8,8 @@ import { useForm } from "@mantine/form";
 const Edit = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  /* console.log(state); */
+  /* console.log(state) */
+
   const [categories, setCategories] = useState([]);
   const [isSale, setSale] = useState(state.is_sale);
 
@@ -71,26 +72,42 @@ const Edit = () => {
       .select()
       .match({ id: id })
       .single();
-    /* console.log(data); */
     form.setValues(data);
   };
   useEffect(() => {
     getProduct(params.id);
-    /* console.log(params.id); */
   }, []);
 
   return (
-    <Box sx={{ maxWidth: 300 }} mx="auto">
+    <Box
+      sx={{
+        maxWidth: 600,
+        minHeight: 500,
+        marginTop: "200px",
+        padding: "30px",
+      }}
+      style={{
+        boxShadow: "0px 0px 6px -1px rgba(0,0,0,0.75)",
+        borderRadius: "5px",
+      }}
+      mx="auto"
+    >
       <h2>Edit product</h2>
       <form onSubmit={form.onSubmit(updateAll)}>
-        <TextInput label={`Product name: `} {...form.getInputProps("name")} />
+        <TextInput
+          label={`Product name: `}
+          {...form.getInputProps("name")}
+          mt="20px"
+        />
         <TextInput
           label={`Description: `}
+          mt="20px"
           placeholder="Enter new product description.."
           {...form.getInputProps("description")}
         />
         <NumberInput
           label={`Price: `}
+          mt="20px"
           min={0}
           parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
           formatter={(value) =>
@@ -102,6 +119,7 @@ const Edit = () => {
         />
         <NumberInput
           min={0}
+          mt="20px"
           label={`Quantity: `}
           defaultValue={0}
           {...form.getInputProps("quantity")}
@@ -109,6 +127,7 @@ const Edit = () => {
         <NumberInput
           min={0}
           max={99}
+          mt="20px"
           label={`Current sale: ${state.is_sale ? percentage : ""}%`}
           {...form.getInputProps("salePercentage")}
         />
@@ -139,7 +158,7 @@ const Edit = () => {
           Update All
         </Button>
       </form>
-      <Button mb="20px" onClick={onDashboard}>
+      <Button mt="20px" mb="20px" onClick={onDashboard}>
         Back to dashboard
       </Button>
     </Box>

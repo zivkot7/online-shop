@@ -33,7 +33,6 @@ const PRODUCTS_PER_PAGE = 10;
 
 const LandingPage = () => {
   const theme = useMantineTheme();
-
   const [opened, setOpened] = useState(false);
   const [openedCart, setOpenedCart] = useState(false);
   const [products, setProducts] = useState([]);
@@ -43,11 +42,9 @@ const LandingPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(false);
   const [searchQuery, setSearchQuery] = useDebouncedState("", 500);
   const [totalPages, setTotalPages] = useState(0);
-
   const navigate = useNavigate();
-
   const auth = useAuth();
-  /* console.log(auth); */
+  const [productQuantities, setProductQuantities] = useState(0);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -77,8 +74,13 @@ const LandingPage = () => {
 
     const { data: products, count, error } = await query;
     setProducts(products);
+    setProductQuantities(
+      products.reduce((acc, product) => {
+        acc[product.id] = product.quantity;
+        return acc;
+      }, {})
+    );
     setTotalPages(Math.ceil(count / PRODUCTS_PER_PAGE));
-    console.log(count);
   };
 
   useEffect(() => {
@@ -102,35 +104,52 @@ const LandingPage = () => {
       return cart.id === product.id;
     });
     if (isExists) {
-      setCartProducts(
-        cartProducts?.map((cart) => {
-          if (cart.id === product.id) {
-            return { ...cart, quantity: cart.quantity + 1 };
+      const updatedCartProducts = cartProducts.map((cart) => {
+        if (cart.id === product.id) {
+          const newQuantity = cart.quantity + 1;
+          console.log(newQuantity);
+          if (newQuantity <= productQuantities[product.id]) {
+            return { ...cart, quantity: newQuantity };
+          } else {
+            return cart;
           }
-          return cart;
-        })
-      );
+        }
+        return cart;
+      });
+      setCartProducts(updatedCartProducts);
     } else {
       return setCartProducts([...cartProducts, { ...product, quantity: 1 }]);
     }
   };
 
-  const onMinusClick = (product) => {
-    const isExists = cartProducts.some((cart) => {
-      return cart.id === product.id;
-    });
+  const onPlus = (product) => {
+    const isExists = cartProducts.some((cart) => cart.id === product.id);
+
     if (isExists) {
-      setCartProducts(
-        cartProducts?.map((cart) => {
-          if (cart.id === product.id && cart.quantity > 1) {
-            return { ...cart, quantity: cart.quantity - 1 };
+      const updatedCartProducts = cartProducts.map((cart) => {
+        if (cart.id === product.id) {
+          const newQuantity = cart.quantity + 1;
+
+          if (newQuantity <= productQuantities[product.id]) {
+            return { ...cart, quantity: newQuantity };
           }
-          return cart;
-        })
-      );
+        }
+        return cart;
+      });
+      setCartProducts(updatedCartProducts);
     } else {
-      return setCartProducts([...cartProducts, { ...product, quantity: 1 }]);
+      setCartProducts([...cartProducts, { ...product, quantity: 1 }]);
     }
+  };
+
+  const onMinusClick = (product) => {
+    const updatedCartProducts = cartProducts.map((cart) => {
+      if (cart.id === product.id && cart.quantity > 1) {
+        return { ...cart, quantity: cart.quantity - 1 };
+      }
+      return cart;
+    });
+    setCartProducts(updatedCartProducts);
   };
 
   const deleteProductFromCart = (id) => {
@@ -149,21 +168,70 @@ const LandingPage = () => {
     setOpenedCart(!openedCart);
   };
   const onCheckoutClick = async () => {
-    const total = cartProducts.reduce((acc, cart) => {
+    let total = cartProducts.reduce((acc, cart) => {
       return cart.quantity * cart.price + acc;
     }, 0);
 
-    const { data, error } = await supabase
+    for (const cart of cartProducts) {
+      const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", cart.id)
+        .single();
+
+      if (productError) {
+        console.error(productError);
+        return;
+      }
+
+      const newQuantity = productData.quantity - cart.quantity;
+
+      const { data: updateData, error: updateError } = await supabase
+        .from("products")
+        .update({ quantity: newQuantity })
+        .eq("id", cart.id);
+
+      if (updateError) {
+        console.error(updateError);
+        return;
+      }
+    }
+
+    const { data, error: errorOrder } = await supabase
       .from("orders")
-      .insert({
+      .upsert({
         user_id: auth.user.id,
         total: total,
       })
-      .single();
-    if (error) {
-      console.error(error);
+      .select("id");
+    const orderId = data[0].id;
+    console.log("order id:", orderId);
+
+    if (errorOrder) {
+      console.error(errorOrder);
       return;
     }
+    console.log("order:", data);
+    if (!data) {
+      console.error("Failed to create order");
+      return;
+    } else {
+    }
+
+    for (const cart of cartProducts) {
+      const { data, error } = await supabase
+        .from("order_products")
+        .insert({
+          user_id: auth.user.id,
+          product_id: cart.id,
+          order_id: orderId,
+        })
+        .single();
+
+      console.log("cart:", cart);
+    }
+
+    setCartProducts([]);
 
     return showNotification({
       icon: <IconCheck size={18} />,
@@ -172,6 +240,7 @@ const LandingPage = () => {
       message: "Your order is submited! 🙂",
     });
   };
+
   const showAllProducts = () => {
     setSelectedCategory("");
     setSearchQuery("");
@@ -245,16 +314,6 @@ const LandingPage = () => {
         header={
           <Header height={{ base: 50, md: 70 }} p="md">
             <div>
-              <MediaQuery largerThan="sm" styles={{ display: "none" }}>
-                <Burger
-                  opened={opened}
-                  onClick={() => setOpened((o) => !o)}
-                  size="sm"
-                  color={theme.colors.gray[6]}
-                  mr="xl"
-                />
-              </MediaQuery>
-
               <Text>
                 <div
                   style={{
@@ -265,18 +324,28 @@ const LandingPage = () => {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <FaShopify size="20" color="#fb5e41" />
+                    <FaShopify size="25" color="#fb5e41" />
                     <Text
                       fw="bold"
                       ml="7px"
-                      size="xl"
+                      size="30px"
                       sx={{ fontFamily: "Martel, serif" }}
                     >
                       Online shop
                     </Text>
                     <Input
-                      ml="180px"
-                      style={{ width: "600px" }}
+                      ml="130px"
+                      styles={() => ({
+                        wrapper: {
+                          backgroundColor: "transparent",
+                          width: "600px",
+                          color: "#fb5e41",
+                          "&:hover": {
+                            transition: "all .3s ease-in-out",
+                            transform: "scale(1.05)",
+                          },
+                        },
+                      })}
                       placeholder="Search for products"
                       onChange={(e) => onSearch(e.target.value)}
                       rightSection={
@@ -289,7 +358,7 @@ const LandingPage = () => {
 
                   {auth.user ? (
                     <Group align="center">
-                      <BsFillPersonFill />
+                      <BsFillPersonFill size="20px" />
                       {auth.user.user_metadata.full_name}
                       <Drawer
                         opened={openedCart}
@@ -325,7 +394,7 @@ const LandingPage = () => {
                                   <ShoppingCartItem
                                     key={product.id}
                                     product={product}
-                                    onPlus={addToCart}
+                                    onPlus={onPlus}
                                     onDelete={deleteProductFromCart}
                                     onMinus={onMinusClick}
                                   />
@@ -351,6 +420,14 @@ const LandingPage = () => {
                           size="xs"
                           variant="gradient"
                           gradient={{ from: "yellow", to: "red" }}
+                          styles={() => ({
+                            root: {
+                              "&:hover": {
+                                transition: "all .2s ease-in-out",
+                                transform: "scale(1.1)",
+                              },
+                            },
+                          })}
                           onClick={hideCart}
                         >
                           <BsCart4 size="17px" />({cartProducts?.length})
@@ -361,6 +438,14 @@ const LandingPage = () => {
                         variant="gradient"
                         size="xs"
                         gradient={{ from: "yellow", to: "red" }}
+                        styles={() => ({
+                          root: {
+                            "&:hover": {
+                              transition: "all .2s ease-in-out",
+                              transform: "scale(1.1)",
+                            },
+                          },
+                        })}
                         onClick={onLogout}
                       >
                         Logout
@@ -373,6 +458,14 @@ const LandingPage = () => {
                         variant="gradient"
                         size="xs"
                         gradient={{ from: "orange", to: "red" }}
+                        styles={() => ({
+                          root: {
+                            "&:hover": {
+                              transition: "all .2s ease-in-out",
+                              transform: "scale(1.1)",
+                            },
+                          },
+                        })}
                         onClick={() => navigate("/login")}
                       >
                         Login
@@ -386,7 +479,8 @@ const LandingPage = () => {
                             border: "1px solid #fb5e41",
                             color: "#fb5e41",
                             "&:hover": {
-                              transition: "0.2s",
+                              transition: "all .2s ease-in-out",
+                              transform: "scale(1.05)",
                               backgroundImage: theme.fn.gradient({
                                 from: "red",
                                 to: "yellow",
@@ -434,11 +528,16 @@ const LandingPage = () => {
               position="center"
               styles={{
                 control: {
+                  boxShadow: "0px 0px 4px -1px rgba(0,0,0,0.75)",
                   backgroundImage: theme.fn.gradient({
                     from: "yellow",
                     to: "red",
                   }),
                   "&:last-child, &:first-of-type": { backgroundImage: "none" },
+                  "&:hover": {
+                    transition: "all .2s ease-in-out",
+                    transform: "scale(1.1)",
+                  },
                 },
               }}
             />

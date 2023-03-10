@@ -1,4 +1,11 @@
-import { ActionIcon, Table, Group, Input } from "@mantine/core";
+import {
+  ActionIcon,
+  Table,
+  Group,
+  Input,
+  ScrollArea,
+  Box,
+} from "@mantine/core";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,21 +32,25 @@ const Products = () => {
 
   const rows = products.map((product) => (
     <tr key={product.id}>
-      <td width="200px">
-        {<img src="https://i.imgur.com/ZL52Q2D.png" width="80px" />}
+      <td width="200px" align="center">
+        <img src={product.image} width="100px" />
       </td>
       <td>{product.name}</td>
-      <td>{product.description}</td>
+      <td>
+        <ScrollArea h={50}>
+          <Box w={200}>{product.description}</Box>
+        </ScrollArea>
+      </td>
       <td>$ {product.sale_price}</td>
       <td
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: "end",
         }}
       >
         ${product.price}
-        <Group>
+        <Group mt="10px">
           <ActionIcon
             size="md"
             variant="gradient"
@@ -66,7 +77,6 @@ const Products = () => {
   };
 
   const deleteData = async (id) => {
-    console.log(id);
     const { error } = await supabase.from("products").delete().eq("id", id);
 
     const newProducts = products.filter((product) => product.id !== id);

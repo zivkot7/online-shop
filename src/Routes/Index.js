@@ -19,31 +19,11 @@ const RenderRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/" element={<UnAuthorizedUser />}>
-        <Route path="/admin/dashboard" element={<Dashboard />} />
-        <Route
-          path="/admin/dashboard/products"
-          element={
-            <Dashboard>
-              <Products />
-            </Dashboard>
-          }
-        />
-        <Route
-          path="/admin/dashboard/categories"
-          element={
-            <Dashboard>
-              <Categories />
-            </Dashboard>
-          }
-        />
-        <Route
-          path="/admin/dashboard/orders"
-          element={
-            <Dashboard>
-              <Orders />
-            </Dashboard>
-          }
-        />
+        <Route path="/admin/dashboard" element={<Dashboard />}>
+          <Route path="products" element={<Products />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="orders" element={<Orders />} />
+        </Route>
         <Route path="/admin/dashboard/:id" element={<Edit />} />
         <Route path="/admin/dashboard/create" element={<Create />} />
       </Route>

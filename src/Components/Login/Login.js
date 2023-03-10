@@ -55,15 +55,31 @@ const Login = () => {
       : navigate("/");
     setLoading(false);
   };
+  const goBackToHomePage = () => {
+    navigate("/");
+  };
 
   return (
-    <Box sx={{ maxWidth: 300 }} mx="auto">
+    <Box
+      mx="auto"
+      sx={{
+        maxWidth: 600,
+        minHeight: 500,
+        marginTop: "200px",
+        padding: "30px",
+      }}
+      style={{
+        boxShadow: "0px 0px 6px -1px rgba(0,0,0,0.75)",
+        borderRadius: "5px",
+      }}
+    >
       <form onSubmit={onSubmit}>
         <h1>Login information </h1>
         <TextInput
           withAsterisk
           label="Email"
           name="email"
+          mt="40px"
           placeholder="your@email.com"
           value={user.email}
           onChange={onChange}
@@ -72,6 +88,7 @@ const Login = () => {
           withAsterisk
           label="Password"
           type={type}
+          mt="20px"
           name="password"
           placeholder="Enter your password"
           onChange={onChange}
@@ -86,7 +103,7 @@ const Login = () => {
             </ActionIcon>
           }
         />
-        <Group position="left" mt="md">
+        <Group position="left" mt="130px">
           <Button
             type="submit"
             loading={loading}
@@ -116,6 +133,15 @@ const Login = () => {
             onClick={() => navigate("/register")}
           >
             Register
+          </Button>
+          <Button
+            type="submit"
+            ml="10px"
+            onClick={goBackToHomePage}
+            variant="gradient"
+            gradient={{ from: "red", to: "yellow" }}
+          >
+            Go back
           </Button>
         </Group>
       </form>

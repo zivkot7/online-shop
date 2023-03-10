@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom/dist";
 import supabase from "../../Config/Config";
-import { Button, Box, TextInput, ActionIcon, Checkbox } from "@mantine/core";
+import {
+  Button,
+  Box,
+  TextInput,
+  ActionIcon,
+  Checkbox,
+  Group,
+} from "@mantine/core";
 import { IconEye, IconEyeOff } from "@tabler/icons";
 
 const Register = () => {
@@ -54,10 +61,24 @@ const Register = () => {
       [name]: value,
     }));
   };
+  const goBackToHomePage = () => {
+    navigate("/");
+  };
 
   return (
-    <Box sx={{ maxWidth: 300 }} mx="auto">
-      <form onSubmit={onRegister}>
+    <Box
+      sx={{
+        maxWidth: 600,
+        minHeight: 500,
+        marginTop: "200px",
+      }}
+      mx="auto"
+      style={{
+        boxShadow: "0px 0px 6px -1px rgba(0,0,0,0.75)",
+        borderRadius: "5px",
+      }}
+    >
+      <form onSubmit={onRegister} style={{ padding: "20px" }}>
         <h1>Registration form </h1>
         <TextInput
           withAsterisk
@@ -73,6 +94,7 @@ const Register = () => {
           label="Email"
           name="email"
           type="text"
+          mt="20px"
           placeholder="your@email.com"
           value={user.email}
           onChange={onChange}
@@ -81,6 +103,7 @@ const Register = () => {
           withAsterisk
           label="Password"
           name="password"
+          mt="20px"
           type={type}
           placeholder="Enter your password"
           value={user.password}
@@ -102,15 +125,33 @@ const Register = () => {
           onChange={onSetRole}
           style={{ display: "flex", justifyContent: "end" }}
         />
-        <Button
-          type="submit"
-          loading={loading}
-          onClick={onRegister}
-          variant="gradient"
-          gradient={{ from: "yellow", to: "red" }}
+        <Group
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignContent: "start",
+          }}
         >
-          Register
-        </Button>
+          <Button
+            type="submit"
+            mt="20px"
+            loading={loading}
+            onClick={onRegister}
+            variant="gradient"
+            gradient={{ from: "yellow", to: "red" }}
+          >
+            Register
+          </Button>
+          <Button
+            type="submit"
+            mt="20px"
+            onClick={goBackToHomePage}
+            variant="gradient"
+            gradient={{ from: "red", to: "yellow" }}
+          >
+            Go back
+          </Button>
+        </Group>
       </form>
     </Box>
   );

@@ -14,18 +14,21 @@ import { useForm } from "@mantine/form";
 import { useAuth } from "../../../Providers/Authentication/Authentication";
 import { useNavigate } from "react-router-dom";
 
+const CDNURL =
+  "https://pmwutxlnihrvjlcruwaw.supabase.co/storage/v1/object/public/avatars/";
+
 const Create = () => {
   const navigate = useNavigate();
   const auth = useAuth();
   const [file, setFile] = useState("");
   const [categories, setCategories] = useState([]);
   const [data, setData] = useState([]);
+  const [imagePath, setImagePath] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase.from("categories").select("*");
       setCategories(data);
-      /* console.log(data); */
     };
 
     fetchCategories();
@@ -51,8 +54,8 @@ const Create = () => {
     },
   });
 
-  const { image, name, description, price, quantity, category, user_id } =
-    form.values;
+  const { name, description, price, quantity, category } = form.values;
+
   const createCategory = async (name) => {
     const { data: categories } = await supabase
       .from("categories")
@@ -77,8 +80,9 @@ const Create = () => {
     } else {
       categoryId = categories?.id;
     }
+
     const { data, error } = await supabase.from("products").insert({
-      image,
+      image: file,
       name,
       description,
       price,
@@ -86,40 +90,58 @@ const Create = () => {
       category_id: categoryId,
       user_id: auth.user.id,
     });
+    if (error) {
+      console.log(error);
+    }
   };
-  /* const onUploadFile = async (file) => {
+  const onUploadFile = async (file) => {
     const { data, error } = await supabase.storage
-      .from("products")
+      .from("avatars")
       .upload(file.name, file, { cacheControl: "3600", upsert: false });
-    console.log(data);
 
-    const { data: finalData } = supabase.storage
-      .from("products")
-      .getPublicUrl(data);
-    setFile(finalData);
-    console.log(data);
-  }; */
+    if (error) {
+      console.log(error);
+    } else {
+      setImagePath(data);
+      setFile(CDNURL + data.path);
+    }
+  };
 
   const onDashboard = () => {
     navigate("/admin/dashboard");
   };
 
   return (
-    <Box sx={{ maxWidth: 300 }} mx="auto">
+    <Box
+      mx="auto"
+      sx={{
+        maxWidth: 600,
+        minHeight: 500,
+        marginTop: "200px",
+        padding: "30px",
+      }}
+      style={{
+        boxShadow: "0px 0px 6px -1px rgba(0,0,0,0.75)",
+        borderRadius: "5px",
+      }}
+    >
       <h1>Create product</h1>
       <form onSubmit={form.onSubmit(onHandleSubmit)}>
         <TextInput
           label="Name:"
+          mt="20px"
           placeholder="Product name.."
           {...form.getInputProps("name")}
         />
         <TextInput
           label="Description:"
           placeholder="Description.."
+          mt="20px"
           {...form.getInputProps("description")}
         />
         <NumberInput
           label="Price:"
+          mt="20px"
           placeholder="Enter your price.."
           min={1}
           parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
@@ -132,6 +154,7 @@ const Create = () => {
         />
         <NumberInput
           label="Quantity:"
+          mt="20px"
           placeholder="Select quantity.."
           defaultValue={0}
           min={1}
@@ -139,6 +162,7 @@ const Create = () => {
         />
         <Select
           label="Category:"
+          mt="20px"
           data={data}
           creatable
           searchable
@@ -154,19 +178,16 @@ const Create = () => {
         <br />
         <Group position="center">
           <FileButton
-            /* onChange={onUploadFile} */
+            onChange={onUploadFile}
             accept="image/png,image/jpeg,image/jpg"
           >
             {(props) => <Button {...props}>Upload image</Button>}
           </FileButton>
-        </Group>
 
-        {file && (
           <Text size="sm" align="center" mt="sm">
-            Picked file: {file.name}
+            Picked file: {imagePath.path}
           </Text>
-        )}
-
+        </Group>
         <br />
         <Button
           type="submit"

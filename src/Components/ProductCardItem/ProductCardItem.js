@@ -8,6 +8,8 @@ import {
   Center,
   Modal,
   Button,
+  ScrollArea,
+  Box,
 } from "@mantine/core";
 import {
   IconGasStation,
@@ -16,11 +18,19 @@ import {
   IconUsers,
 } from "@tabler/icons";
 import { useDisclosure } from "@mantine/hooks";
+import { useMemo } from "react";
 
 const useStyles = createStyles((theme) => ({
   card: {
-    width: "370px",
-    height: "430px",
+    width: "400px",
+    height: "470px",
+    display: "flex",
+    flexDirection: "column",
+    boxShadow: "0px 0px 8px -1px rgba(0,0,0,0.75)",
+    justifyContent: "space-between",
+    paddingBottom: "50px",
+    marginBottom: "30px",
+    marginTop: "25px",
     backgroundColor:
       theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
   },
@@ -50,6 +60,13 @@ const useStyles = createStyles((theme) => ({
       theme.colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[3]
     }`,
   },
+  modalDescriptionSection: {
+    padding: theme.spacing.md,
+    height: "200px",
+    borderTop: `1px solid ${
+      theme.colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[3]
+    }`,
+  },
 
   icon: {
     marginRight: 5,
@@ -69,8 +86,10 @@ const mockdata = [
 
 const ProductCardItem = (props) => {
   const [opened, { close, open }] = useDisclosure(false);
+
   const { name, description, quantity, sale_price, price, image, onClick } =
     props.data;
+
   const { classes } = useStyles();
   const features = mockdata.map((feature) => (
     <Center key={feature.label}>
@@ -79,34 +98,35 @@ const ProductCardItem = (props) => {
     </Center>
   ));
 
+  const percentage = useMemo(() => {
+    return Math.round(((price - sale_price) / price) * 100);
+  }, [price, sale_price]);
+
   return (
     <div className="product-card-item" onClick={onClick}>
-      <Card withBorder radius="md" className={classes.card} mt="50px">
+      <Card withBorder radius="md" className={classes.card}>
         <Card.Section className={classes.imageSection}>
-          <Image
-            src="https://i.imgur.com/ZL52Q2D.png"
-            alt="Tesla Model S"
-            onClick={open}
-          />
+          <Image src={image} onClick={open} width="230px" />
         </Card.Section>
-
         <Group position="apart" mt="md">
-          <div>
-            <Text weight={500}>{name}</Text>
-            <Text size="xs" color="dimmed">
-              {description}
-            </Text>
-          </div>
-          <Badge variant="outline" size="xs">
-            25% off
-          </Badge>
+          <Text weight={500} size="xl">
+            {name}
+          </Text>
+          {sale_price ? (
+            <Badge variant="outline" size="md">
+              {percentage}%
+            </Badge>
+          ) : (
+            ""
+          )}
         </Group>
-
+        <Text size="xs" color="dimmed">
+          Quantity: {quantity}
+        </Text>
         <Card.Section className={classes.section} mt="md">
           <Text size="xs" color="dimmed" className={classes.label}>
-            {description}
+            Features
           </Text>
-
           <Group spacing={8} mb={-8}>
             {features}
           </Group>
@@ -114,21 +134,26 @@ const ProductCardItem = (props) => {
 
         <Card.Section className={classes.section}>
           <Group spacing={30}>
-            <div>
-              <Text size="md" weight={700} sx={{ lineHeight: 1 }}>
-                ${price}
+            {sale_price ? (
+              <Group style={{ display: "flex", flexDirection: "column" }}>
+                <Text size="xl" color="red" weight={700} sx={{ lineHeight: 0 }}>
+                  $ {sale_price}
+                </Text>
+                <Text
+                  size="sm"
+                  color="dimmed"
+                  weight={700}
+                  sx={{ lineHeight: 1 }}
+                  style={{ textDecoration: "line-through" }}
+                >
+                  $ {price.toLocaleString()}
+                </Text>
+              </Group>
+            ) : (
+              <Text size="xl" weight={700} sx={{ lineHeight: 1 }}>
+                $ {price.toLocaleString()}
               </Text>
-              <Text
-                size="xs"
-                color="dimmed"
-                weight={500}
-                sx={{ lineHeight: 1 }}
-                mt={3}
-              >
-                per day
-              </Text>
-            </div>
-
+            )}
             <Button
               radius="md"
               style={{ flex: 1 }}
@@ -141,55 +166,73 @@ const ProductCardItem = (props) => {
           </Group>
         </Card.Section>
       </Card>
-      <Modal opened={opened} onClose={close} centered>
-        <Card withBorder radius="md" className={classes.card} mt="50px">
+      <Modal opened={opened} onClose={close} centered size="lg">
+        <Card withBorder radius="md">
           <Card.Section className={classes.imageSection}>
-            <Image
-              src="https://i.imgur.com/ZL52Q2D.png"
-              alt="Tesla Model S"
-              onClick={open}
-            />
+            <Image src={image} alt="Tesla Model S" onClick={open} />
           </Card.Section>
 
-          <Group position="apart" mt="md">
-            <div>
-              <Text weight={500}>{name}</Text>
-              <Text size="xs" color="dimmed">
-                {description}
-              </Text>
-            </div>
-            <Badge variant="outline" size="xs">
-              25% off
-            </Badge>
+          <Group position="apart" mt="10px">
+            <Text weight={500} size="xl">
+              {name}
+            </Text>
+            {sale_price ? (
+              <Badge variant="outline" size="md">
+                {percentage}%
+              </Badge>
+            ) : (
+              ""
+            )}
           </Group>
 
-          <Card.Section className={classes.section} mt="md">
-            <Text size="xs" color="dimmed" className={classes.label}>
-              {description}
-            </Text>
-
-            <Group spacing={8} mb={-8}>
-              {features}
+          <Card.Section className={classes.modalDescriptionSection} mt="md">
+            <Group position="apart">
+              <Text size="xs" color="dimmed" className={classes.label}>
+                Description :
+              </Text>
+              <Text size="md" color="dimmed">
+                Quantity: {quantity}
+              </Text>
             </Group>
+            <ScrollArea h={150}>
+              <Box w={200}>{description}</Box>
+            </ScrollArea>
           </Card.Section>
 
           <Card.Section className={classes.section}>
             <Group spacing={30}>
-              <div>
-                <Text size="md" weight={700} sx={{ lineHeight: 1 }}>
-                  ${price}
+              {sale_price ? (
+                <Group style={{ display: "flex", flexDirection: "column" }}>
+                  <Text
+                    size="xl"
+                    color="red"
+                    weight={700}
+                    sx={{ lineHeight: 0 }}
+                  >
+                    $ {sale_price}
+                  </Text>
+                  <Text
+                    size="sm"
+                    color="dimmed"
+                    weight={700}
+                    sx={{ lineHeight: 1 }}
+                    style={{ textDecoration: "line-through" }}
+                  >
+                    $ {price.toLocaleString()}
+                  </Text>
+                </Group>
+              ) : (
+                <Text size="xl" weight={700} sx={{ lineHeight: 1 }}>
+                  $ {price.toLocaleString()}
                 </Text>
-                <Text
-                  size="xs"
-                  color="dimmed"
-                  weight={500}
-                  sx={{ lineHeight: 1 }}
-                  mt={3}
-                >
-                  per day
-                </Text>
-              </div>
-
+              )}
+              <Text
+                size="xs"
+                color="dimmed"
+                weight={500}
+                sx={{ lineHeight: 1 }}
+                mt={3}
+              ></Text>
               <Button
                 radius="md"
                 style={{ flex: 1 }}

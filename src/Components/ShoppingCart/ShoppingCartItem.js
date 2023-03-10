@@ -2,19 +2,17 @@ import React from "react";
 import Button from "../Button/Button";
 
 const CartItem = (props) => {
-  const { name, description, price, id, key, quantity } = props.product;
+  const { name, image, price, sale_price, id, key, quantity } = props.product;
   return (
     <div>
       <hr className="header-horizontal" />
       <div key={key} className="cart-product">
         <div className="cart-product-item">
-          <img src="https://i.imgur.com/ZL52Q2D.png" width="120px" />
+          <img src={image} width="120px" />
           <div className="product-details">
             <p className="product-title">{name}</p>
 
-            <p className="product-size-style">
-              {name} | {description}
-            </p>
+            <p className="product-size-style"></p>
             <p className="product-count">Quantity: {quantity}</p>
           </div>
         </div>
@@ -25,9 +23,16 @@ const CartItem = (props) => {
             className="delete-from-cartBtn"
             onClick={() => props.onDelete(id)}
           />
-          <p className="product-price" style={{ margin: "0px" }}>
-            ${(quantity * price).toFixed(2)}
-          </p>
+          {sale_price ? (
+            <p className="product-price" style={{ margin: "0px" }}>
+              ${(quantity * sale_price).toFixed(2)}
+            </p>
+          ) : (
+            <p className="product-price" style={{ margin: "0px" }}>
+              ${(quantity * price).toFixed(2)}
+            </p>
+          )}
+
           <span>
             <Button
               className="minusBtn"

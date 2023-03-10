@@ -12,21 +12,13 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconPencil, IconSearch, IconTrash } from "@tabler/icons";
 import React, { useEffect, useState } from "react";
 import supabase from "../../../../Config/Config";
+import Dashboard from "../Dashboard";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState(null);
   const [openedModal, { open, close }] = useDisclosure(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  /* useEffect(() => {
-    const fetchCategories = async () => {
-      const { data } = await supabase.from("categories").select("*");
-      setCategories(data);
-    };
-
-    fetchCategories();
-  }, []); */
 
   const fetchData = async (searchQuery) => {
     let query = supabase.from("categories").select("*");

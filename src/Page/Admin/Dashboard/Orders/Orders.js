@@ -1,19 +1,10 @@
 import { ActionIcon, Input, Table, Group } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import {
-  IconCheck,
-  IconMail,
-  IconPencil,
-  IconSearch,
-  IconSend,
-  IconTrash,
-} from "@tabler/icons";
+import { IconCheck, IconSearch, IconSend, IconTrash } from "@tabler/icons";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import supabase from "../../../../Config/Config";
 
 const Orders = () => {
-  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 

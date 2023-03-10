@@ -8,18 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* 
-  useEffect(() => {
-    axios
-      .get(`/user.json`)
-      .then((res) => {
-        setData(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []); */
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       console.log(data);
